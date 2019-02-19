@@ -1,51 +1,59 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import datetime
-import re
 
 params = {}
-config = {
-    'write_logs' : 1,
-    'end_day' : 1,
-    'start_day' : 1,
-    'today_date' : None
-}
+config = {}
+
+def csv_read(filepath, keys):
+    """
+    Читалка CSV итерабельная с выбором ключей
+    """
+
+    with open(filepath, 'rt') as csv_file:
+        for i, line in enumerate(csv_file):
+            if not i:
+                headers = {key.strip():i for i, key in enumerate(line.split(','))}
+                keys = keys or headers.keys()
+                pointers = [headers[key] for key in keys]
+                continue
+            data = line.split(',')
+            yield [data[i].strip() for i in pointers]
+
+def write_config():
+    print('[INFO] Write config')
+
+    save_config = 'key,data\n'
+    for i, item in config.items():
+        save_config += i + ',' + item + '\n'
+
+    file_config = open('config.csv', 'w')
+    file_config.write(save_config)
+    file_config.close()
+
+def read_config():
+    print('[INFO] Read config')
+
+    for key, data in csv_read('config.csv', ('key', 'data')):
+        config[key] = data
+    return config
 
 def read_params():
-    params = {}
-    print('[INFO] Read params and config')
+    print('[INFO] Read params')
 
-    file_handler = open('prg.csv', 'r')
-    file_write = file_handler.read()
-    for i, row in enumerate(file_handler):
-        print(str(i))
-        row_split = row.rstrip().split(';')
-        if i < 11:
-            try:
-                config[row_split[0]] = row_split[1]
-            except:
-                pass
-        elif i - 10 == config['start_day']:
-            params['humidity'] = int(row_split[1])
-            params['temp_night'] = int(row_split[2])
-            params['temp_day'] = int(row_split[3])
-    file_handler.close()
+    for day, humidity, temp_day, temp_night in csv_read('prg.csv', ('day', 'humidity', 'temp_day', 'temp_night')):
+        if int(day) == int(config['start_day']):
+            params['humidity'] = humidity
+            params['temp_day'] = temp_day
+            params['temp_night'] = temp_night
+            break
 
-    # Если мы сегодня ещё не записывали данные, то пишем в файл
-    print(config['today_date'])
-    if datetime.datetime.now().strftime('%Y-%m-%d') != config['today_date']:
-        print('[INFO] Write params and config')
-        config['today_date'] = datetime.datetime.now().strftime('%Y-%m-%d')
-        config['start_day'] = str(int(config['start_day']) + 1)
-        file_write = re.sub(r'start_day;(.*?);', 'start_day;' + config['start_day'] + ';', file_write)
-        file_write = re.sub(r'today_date;(.*?);', 'today_date;' + config['today_date'] + ';', file_write)
-        
-        with open('prg.csv', 'w') as file_handler:
-            file_handler.write(file_write)
-            file_handler.close()
+    return params
 
-    return config, params
+config = read_config()
+params = read_params()
 
-# Раз в день обновляемся или при запуске программы
-if datetime.datetime.now().strftime('%Y-%m-%d') != config['today_date']:
-    config, params = read_params()
-    print(config)
-    print(params)
+write_config()
+
+# if datetime.datetime.now().strftime('%Y-%m-%d') != config['today_date']:
