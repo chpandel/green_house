@@ -3,8 +3,12 @@
 
 import datetime
 
+# Интервал таймера в секундах
+timer = 1
+
 params = {}
 config = {}
+next_update = None
 
 def csv_read(filepath, keys):
     """
@@ -43,7 +47,7 @@ def read_params():
     print('[INFO] Read params')
 
     for day, humidity, temp_day, temp_night in csv_read('prg.csv', ('day', 'humidity', 'temp_day', 'temp_night')):
-        if int(day) == int(config['start_day']):
+        if int(day) == int(config['today_day']):
             params['humidity'] = humidity
             params['temp_day'] = temp_day
             params['temp_night'] = temp_night
@@ -51,9 +55,38 @@ def read_params():
 
     return params
 
+def read_sensors():
+    print('read_sensors')
+    pass
+
+def main_prg():
+    read_sensors()
+    pass
+
 config = read_config()
-params = read_params()
 
-write_config()
+while config['end_program'] == '0':
+    # Текущая дата и время
+    now = datetime.datetime.now()
+    if not next_update or next_update <= now:
+        # Обновляем дату следующей проверки
+        next_update = now
+        next_update = next_update + datetime.timedelta(seconds=timer)
 
-# if datetime.datetime.now().strftime('%Y-%m-%d') != config['today_date']:
+        # Если новый день, то обновляем конфиги и прочую чушь
+        if now.strftime('%Y-%m-%d') != config['today_date']:
+            config['today_date'] = now.strftime('%Y-%m-%d')
+
+            # Если программа окончена, то..
+            if config['today_day'] == config['end_day']:
+                print('[INFO] End program')
+                config['end_program'] = '1'
+                write_config()
+                break
+
+            config['today_day'] = str(int(config['today_day']) + 1)
+            params = read_params()
+            write_config()
+
+        # Запускаем основную программу регулирования
+        main_prg()
