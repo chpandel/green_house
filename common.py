@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import globs
+import datetime
 
 def csv_read(filepath, keys):
     """
@@ -38,11 +39,23 @@ def read_config(config):
 def read_params(config, params):
     print('[INFO] Read params')
 
-    for day, humidity, temp_day, temp_night in csv_read(globs.DIR_CSV_PRG, ('day', 'humidity', 'temp_day', 'temp_night')):
+    for day, humidity, temp_day, temp_night, whater_time in csv_read(globs.DIR_CSV_PRG, ('day',
+    'humidity', 'temp_day', 'temp_night', 'whater_time')):
         if int(day) == int(config['today_day']):
             params['humidity'] = humidity
             params['temp_day'] = temp_day
             params['temp_night'] = temp_night
+
+            #TODO::Переписать планировщик поливов
+            whater_time_array = []
+            for item in whater_time.split(';'):
+                item = item.split(':')
+                whater_time_start = datetime.time(int(item[0]), int(item[1]), int(item[2]))
+                whater_time_end = (datetime.datetime.combine(datetime.date(1,1,1),
+                    whater_time_start) + datetime.timedelta(seconds=int(config['whater_time']))
+                ).time()
+                whater_time_array.append([whater_time_start, whater_time_end])
+            params['whater_time'] = whater_time_array
             break
 
     return params
