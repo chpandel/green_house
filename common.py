@@ -19,6 +19,7 @@ def csv_read(filepath, keys):
             data = line.split(',')
             yield [data[i].strip() for i in pointers]
 
+
 def write_config(config):
     print('[INFO] Write config')
 
@@ -30,17 +31,19 @@ def write_config(config):
     file_config.write(save_config)
     file_config.close()
 
+
 def read_config(config):
     print('[INFO] Read config')
     for key, data in csv_read(globs.DIR_CSV_CONFIG, ('key', 'data')):
         config[key] = data
     return config
 
+
 def read_params(config, params):
     print('[INFO] Read params')
 
-    for day, humidity, temp_day, temp_night, whater_time in csv_read(globs.DIR_CSV_PRG, ('day',
-    'humidity', 'temp_day', 'temp_night', 'whater_time')):
+    for day, humidity, temp_day, temp_night, whater_time, light_time in csv_read(globs.DIR_CSV_PRG, ('day',
+    'humidity', 'temp_day', 'temp_night', 'whater_time', 'light_time')):
         if int(day) == int(config['today_day']):
             params['humidity'] = humidity
             params['temp_day'] = temp_day
@@ -56,6 +59,23 @@ def read_params(config, params):
                 ).time()
                 whater_time_array.append([whater_time_start, whater_time_end])
             params['whater_time'] = whater_time_array
+            
+            #Парсим световое время
+            light_time_array = []
+            for item in light_time.split(';'):
+                item = item.split('/')
+                item_0 = item[0].split(':')
+                item_1 = item[1].split(':')
+                light_time_array.append({
+                    'light_time_start' : datetime.time(int(item_0[0]), int(item_0[1]), int(item_0[2])),
+                    'light_time_end' : datetime.time(int(item_1[0]), int(item_1[1]), int(item_1[2]))
+                })
+            params['light_time'] = light_time_array
+
             break
 
     return params
+
+
+def read_sensors():
+    print('read_sensors')
