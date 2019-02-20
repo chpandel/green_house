@@ -11,9 +11,10 @@ config = {}
 next_update = None
 
 def main_prg():
+    now = datetime.datetime.now().time()
+
     # Тут мы поливалькаем...
     for item in params['whater_time']:
-        now = datetime.datetime.now().time()
         if item[0] <= now and now <= item[1]:
             # Включим полив
             print('[INFO] Whater ON !!!')
@@ -23,7 +24,6 @@ def main_prg():
 
     # Тут мы освещаем
     for item in params['light_time']:
-        now = datetime.datetime.now().time()
         if item['light_time_start'] <= now and now <= item['light_time_end']:
             # Включим свет
             pass
@@ -32,6 +32,9 @@ def main_prg():
             pass
 
     # Тут мы контролируем температуру
+    temp = float(params['temp_night'])
+    if params['light_day']['light_day_start'] <= now and now <= params['light_day']['light_day_end']:
+        temp = float(params['temp_day'])
 
 
 # Обновление параметров и конфигов при первом пуске

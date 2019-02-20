@@ -19,7 +19,6 @@ def csv_read(filepath, keys):
             data = line.split(',')
             yield [data[i].strip() for i in pointers]
 
-
 def write_config(config):
     print('[INFO] Write config')
 
@@ -31,51 +30,55 @@ def write_config(config):
     file_config.write(save_config)
     file_config.close()
 
-
 def read_config(config):
     print('[INFO] Read config')
     for key, data in csv_read(globs.DIR_CSV_CONFIG, ('key', 'data')):
         config[key] = data
     return config
 
-
 def read_params(config, params):
     print('[INFO] Read params')
 
-    for day, humidity, temp_day, temp_night, whater_time, light_time in csv_read(globs.DIR_CSV_PRG, ('day',
-    'humidity', 'temp_day', 'temp_night', 'whater_time', 'light_time')):
+    def convert_time(time):
+        time = time.split(':')
+        return datetime.time(int(time[0]), int(time[1]), int(time[2]))
+
+    for day, humidity, temp_day, temp_night, whater_time, light_time, light_day in csv_read(globs.DIR_CSV_PRG, ('day',
+    'humidity', 'temp_day', 'temp_night', 'whater_time', 'light_time', 'light_day')):
         if int(day) == int(config['today_day']):
             params['humidity'] = humidity
             params['temp_day'] = temp_day
             params['temp_night'] = temp_night
 
-            #TODO::Переписать планировщик поливов
+            # Планировщик поливов
             whater_time_array = []
             for item in whater_time.split(';'):
-                item = item.split(':')
-                whater_time_start = datetime.time(int(item[0]), int(item[1]), int(item[2]))
+                whater_time_start = convert_time(item)
                 whater_time_end = (datetime.datetime.combine(datetime.date(1,1,1),
                     whater_time_start) + datetime.timedelta(seconds=int(config['whater_time']))
                 ).time()
                 whater_time_array.append([whater_time_start, whater_time_end])
             params['whater_time'] = whater_time_array
-            
-            #Парсим световое время
+
+            # Парсим световое время
             light_time_array = []
             for item in light_time.split(';'):
                 item = item.split('/')
-                item_0 = item[0].split(':')
-                item_1 = item[1].split(':')
                 light_time_array.append({
-                    'light_time_start' : datetime.time(int(item_0[0]), int(item_0[1]), int(item_0[2])),
-                    'light_time_end' : datetime.time(int(item_1[0]), int(item_1[1]), int(item_1[2]))
+                    'light_time_start' : convert_time(item[0]),
+                    'light_time_end' : convert_time(item[1])
                 })
             params['light_time'] = light_time_array
 
+            # Парсим световой день
+            light_day_array = light_day.split('/')
+            params['light_day'] = {
+                'light_day_start' : convert_time(light_day_array[0]),
+                'light_day_end' : convert_time(light_day_array[1])
+            }
             break
 
     return params
-
 
 def read_sensors():
     print('read_sensors')
