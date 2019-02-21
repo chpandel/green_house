@@ -7,6 +7,7 @@ import common
 
 
 params = {}
+params_sensor = {}
 config = {}
 next_update = None
 
@@ -65,7 +66,11 @@ while config['end_program'] == '0':
             common.write_config(config)
 
         # Считываем показания с сенсоров
-        common.read_sensors()
-
-        # Запускаем основную программу регулирования
-        main_prg()
+        #TODO::Попробуем так. Надо константы задать и обновлять каждый раз пере считыванием во избежание проеба
+        try:
+            params_sensor = common.read_sensors()
+            # Запускаем основную программу регулирования
+            main_prg()
+        except:
+            print("[INFO] Error...")
+            pass

@@ -3,6 +3,8 @@
 
 import globs
 import datetime
+# import serial
+# ser = serial.Serial("/dev/ttyUSB0",9600)
 
 def csv_read(filepath, keys):
     """
@@ -81,4 +83,29 @@ def read_params(config, params):
     return params
 
 def read_sensors():
-    print('read_sensors')
+    AnalogData = []
+    DigitalData = []
+    str_0 = ser.readline()
+    str_1,str_2,str_3 = str(str_0).split("/")
+    str_1 = str_1[2:]
+    if int(str_1) == len(str_0) - 1:
+        str_4 = []
+        str_5 = []
+        AnalogData = str_2.split(":")
+        str_3 = str_3[0:len(str_4)-5]
+        str_4 = str_3.split(":")
+        for i in range(0,len(str_4)):
+            DigitalData.append([])
+            str_5 = str_4[i].split("!")
+            DigitalData[i].append(str_5[0])
+            DigitalData[i].append(str_5[1])
+    a = 0
+    for a in range(a,len(AnalogData)):
+        print("Sensor ",a," : ",AnalogData[a])
+
+    for d in range(0,len(DigitalData)):
+        print("Sensor ",a+d+1," TEMP : ",DigitalData[d][0])
+        print("Sensor ",a+d+1," HUMIDITY : ",DigitalData[d][1])
+    print("-----------------------------")
+
+    return {'Analog' : AnalogData, 'Digintal' : DigitalData}
